@@ -109,18 +109,22 @@ def main():
 	##Default stellar parameters 
 	config=ConfigParser.SafeConfigParser(defaults={'name': 'archive'.format(tag), 'N':'100', 'e':'0.7',
 		'gravity':'basic', 'integrator':'ias15', 'dt':'0', \
-		'a_min':'1.', 'a_max':'2.', 'ang':'2.', 'm':'5e-5', 'keep_bins':'False', 'rt':'1.0e-4', 'coll':'line', 'pRun':'500', 'pOut':'0.1', 
-		'p':'1', 'pSave':10}, dict_type=OrderedDict)
+		'a_min':'1.', 'a_max':'2.', 'ang':'2.', 'm':'5e-5', 'keep_bins':'False', 'rt':'1.0e-4', 'coll':'line', 'pRun':'500', 'pOut':'10', 
+		'p':'1', 'pSave':'50'}, dict_type=OrderedDict)
 	# config.optionxform=str
 	config.read(config_file)
 
 	##Name of our put file 
 	name=config.get('params', 'name')
 	name=name+"_"+tag+".bin"
-	##Length of simulation and interval between snapshots
-	pRun=config.getfloat('params', 'pRun')
-	pOut=config.getfloat('params', 'pOut')
-	pSave=config.getfloat('params', 'pSave')
+	##Number of orbits to run for.
+	pRun=config.getint('params', 'pRun')
+	##Number of times per orbit to save data.
+	pOut=config.getint('params', 'pOut')
+	##Number of times to save data per simulation
+	pSave=config.getint('params', 'pSave')
+	times = np.linspace(0, pRun, pRun*pOut+1)
+
 	keep_bins=config.getboolean('params', 'keep_bins')
 	rt=config.getfloat('params', 'rt')
 	coll=config.get('params', 'coll')
@@ -203,9 +207,9 @@ def main():
 	sim.move_to_com()
 
 	en=sim.calculate_energy()
-	print sim.N, rebound.__version__
-	t=0.0
-	orb_idx=0
+	N=sim.N_real-1
+	print rebound.__version__
+	np.savetxt("masses.txt", [sim.particles[i+1].m for i in range(N)])
 
 	# initialize orbital element arrays
 	# each star has its own line. Outputs for each orbital period are separated by spaces. 
@@ -227,8 +231,9 @@ def main():
 	Jy = np.zeros(len(times))
 	Jz = np.zeros(len(times))
 
-	times = np.linspace(0, pRun, pRun/pOut+1)
+	
 	for i,time in enumerate(times):
+		sim.move_to_com()
 		orbits=sim.calculate_orbits(primary=sim.particles[0])
 		for j in range(N):
 			# move kepler elements to arrays
@@ -252,10 +257,10 @@ def main():
 
 		#np.savetxt(name.replace('.bin', '_orb_{0}.dat'.format(orb_idx)), [[oo.a, oo.e, oo.inc, oo.Omega, oo.omega, oo.f] for oo in orbits])
 		sim.integrate(time*2.0*np.pi)
-		# Print to files every 10 orbital periods, and at the end
-		if (i % (pRun / pSave) == 0) or ((i + 1) == (pRun)):
+		if (i % (pSave) == 0) or ((i + 1) == pRun ):
 			# Save arrays to files
-			np.savetxt('eccentricity.txt'.format(tag), eccentricity, delimiter=' ')
+			#np.savetxt('eccentricity_{0}.txt'.format(tag), eccentricity, delimiter=' ')
+			np.savetxt('eccentricity.txt', eccentricity, delimiter=' ')
 			np.savetxt('inclination.txt', inclination, delimiter=' ')
 			np.savetxt('Omega.txt', Omega, delimiter=' ')
 			np.savetxt('ommega.txt', omega, delimiter=' ')

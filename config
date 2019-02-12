@@ -1,5 +1,5 @@
 [params]
-pRun = 3
+pRun = 1
 keep_bins=False
 
 [stars]
