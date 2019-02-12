@@ -110,7 +110,7 @@ def main():
 	config=ConfigParser.SafeConfigParser(defaults={'name': 'archive'.format(tag), 'N':'100', 'e':'0.7',
 		'gravity':'basic', 'integrator':'ias15', 'dt':'0', \
 		'a_min':'1.', 'a_max':'2.', 'ang':'2.', 'm':'5e-5', 'keep_bins':'False', 'rt':'1.0e-4', 'coll':'line', 'pRun':'500', 'pOut':'0.1', 
-		'p':'1'}, dict_type=OrderedDict)
+		'p':'1', 'pSave':10}, dict_type=OrderedDict)
 	# config.optionxform=str
 	config.read(config_file)
 
@@ -120,6 +120,7 @@ def main():
 	##Length of simulation and interval between snapshots
 	pRun=config.getfloat('params', 'pRun')
 	pOut=config.getfloat('params', 'pOut')
+	pSave=config.getfloat('params', 'pSave')
 	keep_bins=config.getboolean('params', 'keep_bins')
 	rt=config.getfloat('params', 'rt')
 	coll=config.get('params', 'coll')
@@ -197,7 +198,7 @@ def main():
 	sim.collision_resolve=get_tde
 
 	##Set up simulation archive for output
-	sim.automateSimulationArchive(name,interval=2.0*np.pi*pOut,deletefile=True)
+	# sim.automateSimulationArchive(name,interval=2.0*np.pi*pOut,deletefile=True)
 	#sim.heartbeat=heartbeat
 	sim.move_to_com()
 
@@ -205,12 +206,73 @@ def main():
 	print sim.N, rebound.__version__
 	t=0.0
 	orb_idx=0
-	while(t<pRun*2.0*np.pi):
+
+	# initialize orbital element arrays
+	# each star has its own line. Outputs for each orbital period are separated by spaces. 
+	semimajor_axis = np.zeros([N, len(times)])
+	eccentricity = np.zeros([N, len(times)])
+	inclination = np.zeros([N, len(times)])
+	Omega = np.zeros([N, len(times)])
+	omega = np.zeros([N, len(times)])
+	mean_anomaly = np.zeros([N, len(times)])
+	x = np.zeros([N, len(times)])
+	y = np.zeros([N, len(times)])
+	z = np.zeros([N, len(times)])
+	vx = np.zeros([N, len(times)])
+	vy = np.zeros([N, len(times)])
+	vz = np.zeros([N, len(times)])
+
+	E = np.zeros(len(times))
+	Jx = np.zeros(len(times))
+	Jy = np.zeros(len(times))
+	Jz = np.zeros(len(times))
+
+	times = np.linspace(0, pRun, pRun/pOut+1)
+	for i,time in enumerate(times):
 		orbits=sim.calculate_orbits(primary=sim.particles[0])
-		np.savetxt(name.replace('.bin', '_orb_{0}.dat'.format(orb_idx)), [[oo.a, oo.e, oo.inc, oo.Omega, oo.omega, oo.f] for oo in orbits])
-		sim.integrate(sim.t+2.0*np.pi)
-		t+=2.0*np.pi
-		orb_idx+=1
+		for j in range(N):
+			# move kepler elements to arrays
+			# the massive star is sim.particles[1], but orbits[0]
+			# there are N+2 total particles, with N+1 stars
+			eccentricity[j,i] = orbits[j].e
+			inclination[j,i] = orbits[j].inc
+			Omega[j,i] = orbits[j].Omega
+			omega[j,i] = orbits[j].omega
+			semimajor_axis[j,i] = orbits[j].a
+			mean_anomaly[j,i] = orbits[j].M
+			x[j,i] = sim.particles[j+1].x
+			y[j,i] = sim.particles[j+1].y
+			z[j,i] = sim.particles[j+1].z
+			vx[j,i] = sim.particles[j+1].vx
+			vy[j,i] = sim.particles[j+1].vy
+			vz[j,i] = sim.particles[j+1].vz
+
+		E[i] = sim.calculate_energy()
+		Jx[i],Jy[i],Jz[i] = sim.calculate_angular_momentum()
+
+		#np.savetxt(name.replace('.bin', '_orb_{0}.dat'.format(orb_idx)), [[oo.a, oo.e, oo.inc, oo.Omega, oo.omega, oo.f] for oo in orbits])
+		sim.integrate(time*2.0*np.pi)
+		# Print to files every 10 orbital periods, and at the end
+		if (i % (pRun / pSave) == 0) or ((i + 1) == (pRun)):
+			# Save arrays to files
+			np.savetxt('eccentricity.txt'.format(tag), eccentricity, delimiter=' ')
+			np.savetxt('inclination.txt', inclination, delimiter=' ')
+			np.savetxt('Omega.txt', Omega, delimiter=' ')
+			np.savetxt('ommega.txt', omega, delimiter=' ')
+			np.savetxt('semimajor_axis.txt', semimajor_axis, delimiter=' ')
+			np.savetxt('mean_anomaly.txt', mean_anomaly, delimiter=' ')
+			np.savetxt('x.txt', x, delimiter=' ')
+			np.savetxt('y.txt', y, delimiter=' ')
+			np.savetxt('z.txt', z, delimiter=' ')
+			np.savetxt('vx.txt', vx, delimiter=' ')
+			np.savetxt('vy.txt', vy, delimiter=' ')
+			np.savetxt('vz.txt', vz, delimiter=' ')
+			np.savetxt('Energy.txt',E, delimiter=' ')
+			np.savetxt('Angular_momentum_x.txt', Jx, delimiter=' ')
+			np.savetxt('Angular_momentum_y.txt', Jy, delimiter=' ')
+			np.savetxt('Angular_momentum_z.txt', Jz, delimiter=' ')
+			sim.save('simOrbit{}.bin'.format(i))
+
 	# sim.integrate(pRun*2*np.pi)
 	en2=sim.calculate_energy()
 	print abs(en2-en)/en
