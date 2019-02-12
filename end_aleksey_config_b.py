@@ -115,8 +115,8 @@ def main():
 	config.read(config_file)
 
 	##Name of our put file 
-	name=config.get('params', 'name')
-	name=name+"_"+tag+".bin"
+	# name=config.get('params', 'name')
+	# name=name+"_"+tag
 	##Number of orbits to run for.
 	pRun=config.getint('params', 'pRun')
 	##Number of times per orbit to save data.
@@ -124,6 +124,7 @@ def main():
 	##Number of times to save data per simulation
 	pSave=config.getint('params', 'pSave')
 	times = np.linspace(0, pRun, pRun*pOut+1)
+	print times
 
 	keep_bins=config.getboolean('params', 'keep_bins')
 	rt=config.getfloat('params', 'rt')
@@ -213,6 +214,7 @@ def main():
 
 	# initialize orbital element arrays
 	# each star has its own line. Outputs for each orbital period are separated by spaces. 
+	print len(times)
 	semimajor_axis = np.zeros([N, len(times)])
 	eccentricity = np.zeros([N, len(times)])
 	inclination = np.zeros([N, len(times)])
@@ -233,6 +235,7 @@ def main():
 
 	
 	for i,time in enumerate(times):
+		print i
 		sim.move_to_com()
 		orbits=sim.calculate_orbits(primary=sim.particles[0])
 		for j in range(N):
@@ -257,7 +260,7 @@ def main():
 
 		#np.savetxt(name.replace('.bin', '_orb_{0}.dat'.format(orb_idx)), [[oo.a, oo.e, oo.inc, oo.Omega, oo.omega, oo.f] for oo in orbits])
 		sim.integrate(time*2.0*np.pi)
-		if (i % (pSave) == 0) or ((i + 1) == pRun ):
+		if (i % (pSave) == 0) or ((i+1) == pRun*pOut ):
 			# Save arrays to files
 			#np.savetxt('eccentricity_{0}.txt'.format(tag), eccentricity, delimiter=' ')
 			np.savetxt('eccentricity.txt', eccentricity, delimiter=' ')
@@ -279,10 +282,10 @@ def main():
 			sim.save('simOrbit{}.bin'.format(i))
 
 	# sim.integrate(pRun*2*np.pi)
-	en2=sim.calculate_energy()
-	print abs(en2-en)/en
-	fen.write('_{0:2.3g}'.format(abs(en2-en)/en))
-	fen.close()
+	# en2=sim.calculate_energy()
+	# print abs(en2-en)/en
+	# fen.write('_{0:2.3g}'.format(abs(en2-en)/en))
+	# fen.close()
 
 
 

@@ -1,5 +1,6 @@
 [params]
 pRun = 1
+pOut = 1
 keep_bins=False
 
 [stars]
