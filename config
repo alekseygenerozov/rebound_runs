@@ -1,6 +1,7 @@
 [params]
 pRun = 1
 pOut = 1
+pSave = 50
 keep_bins=False
 
 [stars]

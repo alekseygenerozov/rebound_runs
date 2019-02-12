@@ -177,8 +177,8 @@ def main():
 			sim.particles[ii].vx, sim.particles[ii].vy, sim.particles[ii].vz, sim.particles[ii].m))
 	f.close()
 
-	fen=open(name.replace('.bin', '_en'), 'a')
-	fen.write(sim.gravity+'_'+sim.integrator+'_'+'{0}'.format(sim.dt))
+	# fen=open(name.replace('.bin', '_en'), 'a')
+	# fen.write(sim.gravity+'_'+sim.integrator+'_'+'{0}'.format(sim.dt))
 	if not keep_bins:
 		##Integrate forward a small amount time to initialize accelerations.
 		sim.move_to_com()
@@ -232,7 +232,6 @@ def main():
 	Jx = np.zeros(len(times))
 	Jy = np.zeros(len(times))
 	Jz = np.zeros(len(times))
-
 	
 	for i,time in enumerate(times):
 		print i
@@ -262,24 +261,24 @@ def main():
 		sim.integrate(time*2.0*np.pi)
 		if (i % (pSave) == 0) or ((i+1) == pRun*pOut ):
 			# Save arrays to files
-			#np.savetxt('eccentricity_{0}.txt'.format(tag), eccentricity, delimiter=' ')
-			np.savetxt('eccentricity.txt', eccentricity, delimiter=' ')
-			np.savetxt('inclination.txt', inclination, delimiter=' ')
-			np.savetxt('Omega.txt', Omega, delimiter=' ')
-			np.savetxt('ommega.txt', omega, delimiter=' ')
-			np.savetxt('semimajor_axis.txt', semimajor_axis, delimiter=' ')
-			np.savetxt('mean_anomaly.txt', mean_anomaly, delimiter=' ')
-			np.savetxt('x.txt', x, delimiter=' ')
-			np.savetxt('y.txt', y, delimiter=' ')
-			np.savetxt('z.txt', z, delimiter=' ')
-			np.savetxt('vx.txt', vx, delimiter=' ')
-			np.savetxt('vy.txt', vy, delimiter=' ')
-			np.savetxt('vz.txt', vz, delimiter=' ')
-			np.savetxt('Energy.txt',E, delimiter=' ')
-			np.savetxt('Angular_momentum_x.txt', Jx, delimiter=' ')
-			np.savetxt('Angular_momentum_y.txt', Jy, delimiter=' ')
-			np.savetxt('Angular_momentum_z.txt', Jz, delimiter=' ')
-			sim.save('simOrbit{}.bin'.format(i))
+			#np.savetxt('eccentricity.txt', eccentricity, delimiter=' ')
+			np.savetxt('eccentricity_{0}.txt'.format(tag), eccentricity, delimiter=' ')
+			np.savetxt('inclination_{0}.txt'.format(tag), inclination, delimiter=' ')
+			np.savetxt('Omega_{0}.txt'.format(tag), Omega, delimiter=' ')
+			np.savetxt('ommega_{0}.txt'.format(tag), omega, delimiter=' ')
+			np.savetxt('semimajor_axis_{0}.txt'.format(tag), semimajor_axis, delimiter=' ')
+			np.savetxt('mean_anomaly_{0}.txt'.format(tag), mean_anomaly, delimiter=' ')
+			np.savetxt('x_{0}.txt'.format(tag), x, delimiter=' ')
+			np.savetxt('y_{0}.txt'.format(tag), y, delimiter=' ')
+			np.savetxt('z_{0}.txt'.format(tag), z, delimiter=' ')
+			np.savetxt('vx_{0}.txt'.format(tag), vx, delimiter=' ')
+			np.savetxt('vy_{0}.txt'.format(tag), vy, delimiter=' ')
+			np.savetxt('vz_{0}.txt'.format(tag), vz, delimiter=' ')
+			np.savetxt('Energy_{0}.txt'.format(tag),E, delimiter=' ')
+			np.savetxt('Angular_momentum_x_{0}.txt'.format(tag), Jx, delimiter=' ')
+			np.savetxt('Angular_momentum_y_{0}.txt'.format(tag), Jy, delimiter=' ')
+			np.savetxt('Angular_momentum_z_{0}.txt'.format(tag), Jz, delimiter=' ')
+			sim.save('simOrbit_{0}_{1}.bin'.format(tag, i))
 
 	# sim.integrate(pRun*2*np.pi)
 	# en2=sim.calculate_energy()
